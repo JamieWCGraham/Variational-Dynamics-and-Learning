@@ -1,18 +1,26 @@
 
-# Learning as a Stochastic Variational Dynamical System
+# A Variational and Geometric Perspective on Learning Dynamics
 
-## Central Question
+We present an integrated variational–geometric perspective on learning dynamics and identify structural principles shared across optimization, inference, and generative modeling.
 
-Can modern learning algorithms be understood as trajectory selection principles governed by variational and thermodynamic structure?
+## Central Questions
+
+What structural principles govern the dynamics of learning, and how do variational and thermodynamic ideas clarify their relationships?
+
+In what precise sense can learning dynamics be understood as variational flows of energy functionals under chosen geometric and stochastic structures?
+
+What is the minimal geometric and variational structure required to describe modern learning algorithms?
+
+Can deterministic optimization, stochastic gradient methods, variational inference, and diffusion be described within a common variational–geometric framework, and what structural elements differentiate them?
+
 
 ## Core Sections 
-- Variational Mechanics and Trajectory Optimization
-- Gradient Flow vs Hamiltonian Flow
-- Dissipative Dynamics and Learning
-- Adding Noise: Langevin and Thermodynamic Structure
-- Variational Inference as Action Minimization
-- Diffusion Models as Probabilistic Trajectories
-- Toward a Unified Geometric View
+- Variational Mechanics (clean, concise)
+- Gradient Flows as Dissipative Variational Systems
+- Stochastic Extensions and Thermodynamic Structure
+- Distribution-Space Dynamics
+- Connections to Optimization, VI, Diffusion
+
 
 
 ## Variational Mechanics and Trajectory Optimization 
