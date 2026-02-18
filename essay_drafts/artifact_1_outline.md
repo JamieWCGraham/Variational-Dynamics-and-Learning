@@ -141,7 +141,7 @@ where $Q$ is the configuration space of the system, $TQ$ is its tangent bundle (
 
 ### Action Functional
 
-We now introduce the central object linking **dynamics** and **optimization**. The **action functional** assigns a single number to an entire trajectory. Instead of evaluating the Lagrangian at one instant, we integrate $L(q,\dot q,t)$ over time between two fixed moments $t_0$ and $t_1$. That integral measures the total “cost” or “score” accumulated along the path. Physical trajectories are those that make this total score **stationary**—small variations of the path do not change the value of the action to first order. So the action functional turns the question “what path does the system follow?” into an optimization problem over curves: nature (or an algorithm) chooses the path that extremizes $S$ among all curves connecting the same endpoints.
+We now introduce the central object linking **dynamics** and **optimization**. The **action functional** assigns a single number to an entire trajectory. Instead of evaluating the Lagrangian at one instant, we integrate $L(q,\dot q,t)$ over time between two fixed moments $t_0$ and $t_1$. That integral measures the total “cost” or “score” accumulated along the path. Physical trajectories are those that make this total score **stationary**—small variations of the path do not change the value of the action to first order. So the action functional turns the question “what path does the system follow?” into an optimization problem over curves: nature (or an algorithm) chooses the path that makes $S$ stationary over all curves in a space of infinite dimensional functions connecting the same endpoints.
 
 $$
 S[q(\cdot)] = \int_{t_0}^{t_1} L(q(t), \dot{q}(t), t)\, dt
@@ -154,4 +154,142 @@ Where:
 * $L$ is the Lagrangian
 
 Typically, one varies over trajectories satisfying boundary conditions $q(t_0)=q_0$ and $q(t_1)=q_1$, and seeks paths that make $S$ **stationary** (often minimal in physical systems). In our running example, substituting $L(q,\dot q,t)=\tfrac12 m\dot q^2 - V(q)$ makes $S[q(\cdot)]$ an explicit “score” assigned to entire paths.
+
+
+### Toward the Euler–Lagrange Equation
+
+Knowing that physical trajectories are those that make the action stationary is not yet enough to *compute* them. We need a **local** condition—a differential equation—that a curve must satisfy at each time if it is to extremize $S$. That condition is the **Euler–Lagrange equation**. 
+
+$$
+\frac{\partial L}{\partial x} -
+\frac{d}{dt} \frac{\partial L}{\partial \dot{x}}  = 0
+$$
+
+We will motivate that this condition emerges naturally from the stationarity condition on the action functional. Consider this as an analogue of setting the derivative to zero in ordinary calculus: instead of "derivative of a function equals zero at a critical point," we get "a certain combination of derivatives of $L$ evaluated along the curve equals zero at each time."
+
+Our derivation proceeds by **variation**. We take a candidate trajectory $q(t)$ and perform a first-order perturbation of it slightly to $q(t) + \epsilon\,\eta(t)$, where $\eta(t)$ is an arbitrary smooth function that vanishes at the endpoints, giving the boundary condition: 
+
+$$
+\eta(t_0) = \eta(t_1) = 0
+$$
+
+Thus we only consider curves that still connect the same two configurations $q_0$ and $q_1$. 
+
+We then ask: for $S[q(t)]$ to be stationary at $q(t)$, the first-order change in $S$ with respect to $\epsilon$ must vanish for *every* such perturbation $\eta$, that is: 
+
+
+$$
+\delta S = \frac{d}{d \epsilon}S[q(t) + \epsilon\eta(t)] \bigg|_{\epsilon=0} = 0
+$$
+
+Let us also insert our first order perturbation of the trajectory $q(t)$ into the action functional.
+
+
+$$
+S[q(t) + \epsilon\eta(t)] = \int_{t_0}^{t_1} L(q(t) + \epsilon\eta(t), \dot{q}(t) + \epsilon\dot{\eta}(t), t)\, dt
+$$
+
+Altogether, this gives us 
+
+
+$$
+\delta S = \int \left(\frac{\partial L}{\partial q} \eta
++ \frac{\partial L}{\partial \dot{q}} \dot{\eta}\right) dt = 0
+$$
+
+This shows that the variation of the action functional is seperable into a term that encodes sensitivity to position as well as senstitivity to velocity, hinting that motion depends on both.  
+
+We now perform a trick on the second term, using integration by parts.
+
+$$
+\int \left(\frac{\partial L}{\partial \dot{q}} \dot{\eta}\right) dt
+$$
+
+Integrating by parts:
+$$
+
+= \left[ \frac{\partial L}{\partial \dot{q}} \eta(t) \right]_{t_0}^{t_1}
+- \int \frac{d}{dt} \left(\frac{\partial L}{\partial \dot{q}}\right) \eta(t)  dt
+$$
+
+But notice that the first term vanishes due to the aforementioned boundary conditions. $\eta(t_0) = \eta(t_1) = 0$
+
+So we obtain:
+$$
+\delta S =
+\int
+\left(
+\frac{\partial L}{\partial q} -
+
+\frac{d}{dt} \frac{\partial L}{\partial \dot{q}}
+\right)
+\eta(t)
+dt = 0
+$$
+
+Note now that the variation of S collapses into a single term multiplied by an arbitary smooth function $\eta(t)$, yet in order for the action to be stationary for all admissable variations, the integral must be equal to zero. Since $\eta(t)$ is arbitary, the only way this is possible is if the condition 
+
+$$
+\frac{\partial L}{\partial q} -
+\frac{d}{dt} \frac{\partial L}{\partial \dot{q}}  = 0
+$$
+
+Which is the Euler-Lagrange equation, so we are done. 
+
+$$
+\square
+$$
+
+Intuitively, we see that the Euler-Lagrange equation emerges as a local constraint on the Lagrangian, following from extremizing the action functional $S$.
+
+### On The Implications of Stationary Action 
+
+What does stationary action really imply?
+
+$$
+
+\delta S = 0
+
+$$
+
+This means that the physical trajectory $q(t)$ that emerges in a system is a stationary point in function space. This is not necessarily a minimum, it could be a maximum or saddle point, but it is a stationary point.
+
+
+### 7. An Example, Recovering Newton's Second Law from Stationary Action.
+
+A single particle of mass $m$ in one dimension with position $x(t)$ in a potential $V(x)$ has Lagrangian
+
+$$
+L = \frac{1}{2} m \dot{x}^2 - V(x).
+$$
+
+Applying the Euler–Lagrange equation 
+
+$$\frac{\partial L}{\partial x} - \frac{d}{dt}\frac{\partial L}{\partial \dot{x}} = 0$$
+
+In one dimension, we note that the partial derivative of the Lagrangian with respect to x is actually equal to the negative gradient of the potential.
+$$ 
+\frac{\partial L}{\partial x} = -\frac{\partial V}{\partial x} = -\nabla V
+$$
+
+Note that taking the derivative of the lagrangian with resepect to velocity gives 
+$$
+\frac{\partial L}{\partial \dot{x}} = m\dot{x}
+$$
+
+Taking a time derivative gives
+
+$$
+\frac{d}{dt}\frac{\partial L}{\partial \dot{x}} = m\ddot{x}
+$$
+
+Substituting Euler-Lagrange, we get
+
+$$
+m\ddot{x} = -\nabla V = F
+$$
+
+Which is Newton’s second law. Note that Newton's second law thus emerges from the Euler-Lagrange equation, which is an emerges from stationary action. 
+
+Local dynamics (the ODE at each instant) emerges from global optimization (extremizing $S$ over entire trajectories). This is a central insight we can apply to modern settings, where trajectory selection by a variational principle appears in learning and diffusion.
 
