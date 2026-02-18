@@ -141,7 +141,7 @@ where $Q$ is the configuration space of the system, $TQ$ is its tangent bundle (
 
 ### Action Functional
 
-We now introduce the central object linking **dynamics** and **optimization**. Here, we define the **action functional** on trajectories (typically with fixed endpoints):
+We now introduce the central object linking **dynamics** and **optimization**. The **action functional** assigns a single number to an entire trajectory. Instead of evaluating the Lagrangian at one instant, we integrate $L(q,\dot q,t)$ over time between two fixed moments $t_0$ and $t_1$. That integral measures the total “cost” or “score” accumulated along the path. Physical trajectories are those that make this total score **stationary**—small variations of the path do not change the value of the action to first order. So the action functional turns the question “what path does the system follow?” into an optimization problem over curves: nature (or an algorithm) chooses the path that extremizes $S$ among all curves connecting the same endpoints.
 
 $$
 S[q(\cdot)] = \int_{t_0}^{t_1} L(q(t), \dot{q}(t), t)\, dt
