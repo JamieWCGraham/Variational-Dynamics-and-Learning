@@ -269,4 +269,145 @@ Which is Newton's second law. Note that Newton's second law thus emerges from th
 
 Local dynamics (the ODE at each instant) emerges from global optimization (extremizing $S$ over entire trajectories). This is a central insight we can apply to modern settings, where trajectory selection by a variational principle appears in learning and diffusion.
 
+
+\section{Gradient Flows as Dissipative Variational Systems}
+
+\subsection{From Stationary Action to Energy Dissipation}
+
+In classical variational mechanics, trajectories arise from the stationarity of an action functional. Under suitable regularity assumptions, this yields Euler–Lagrange equations whose associated dynamics are typically conservative. In particular, for time-independent Lagrangians, the Hamiltonian energy
+\begin{equation}
+H(q,\dot q)
+\end{equation}
+is preserved along trajectories:
+\begin{equation}
+\frac{d}{dt} H(q(t),\dot q(t)) = 0.
+\end{equation}
+The variational principle therefore selects trajectories consistent with energy conservation rather than energy decay.
+
+Learning dynamics, by contrast, are intrinsically dissipative. Let
+\begin{equation}
+\mathcal{E} : \Theta \to \mathbb{R}
+\end{equation}
+denote a loss or objective functional defined on a parameter space $\Theta$. A fundamental property of most training procedures is that along the trajectory $\theta(t)$, the objective decreases:
+\begin{equation}
+\frac{d}{dt} \mathcal{E}(\theta(t)) \le 0.
+\end{equation}
+Rather than preserving an energy functional, learning algorithms are designed to drive the system toward lower-energy configurations.
+
+This structural distinction suggests that stationary action is not the appropriate variational framework for learning. Instead, learning dynamics are more naturally described as gradient flows of energy functionals, in which dissipation is fundamental rather than accidental.
+
+In the context of supervised learning, the energy functional $\mathcal{E}$ may represent empirical risk,
+\begin{equation}
+\mathcal{E}(\theta) = \frac{1}{n} \sum_{i=1}^n \ell(f_\theta(x_i), y_i),
+\end{equation}
+
+where $f_\theta$ is a parameterized model and $\ell$ a loss function. More generally, $\mathcal{E}$ may denote any differentiable objective functional whose minimization defines the learning problem.
+
+
+\subsection{Gradient Flow in Euclidean Parameter Space}
+
+A gradient flow is a continuous-time dynamical system that evolves according to the direction of steepest descent of an energy functional. 
+
+The gradient flow of an energy functional is defined by the following differential equation:
+
+\begin{equation}
+\dot{\theta}(t) = -\nabla \mathcal{E}(\theta(t)).
+\end{equation}
+
+
+Taking the time derivative of the energy functional, we get:
+\begin{equation}
+\frac{d}{dt} \mathcal{E}(\theta(t)) = \langle \nabla \mathcal{E}(\theta(t)), \dot{\theta}(t) \rangle
+\end{equation}
+
+Substituting the gradient flow equation into the time derivative of the energy functional, we get:
+\begin{equation}
+\frac{d}{dt} \mathcal{E}(\theta(t)) = -\langle \nabla \mathcal{E}(\theta(t)), \nabla \mathcal{E}(\theta(t)) \rangle = - |\nabla \mathcal{E}(\theta(t))|^2 \le 0
+\end{equation}
+
+Thus the energy decreases monotonically along trajectories of the flow. In contrast to conservative Euler--Lagrange dynamics, where stationarity of an action yields energy preservation, gradient flow dynamics are intrinsically dissipative: the energy functional itself drives motion toward lower-energy configurations.
+
+Importantly, the definition of the gradient depends on the underlying metric structure on $\Theta$. The Euclidean inner product induces the standard gradient operator; alternative choices of geometry give rise to distinct gradient flows.
+
+\subsection{Minimizing Movements: A Dissipative Variational Principle}
+
+Although gradient flow is defined as a differential equation, it admits an equivalent variational characterization. This formulation restores variational structure in a manner fundamentally distinct from stationary action.
+
+Let $\eta > 0$ be a time-step parameter. Given a current state $\theta_k \in \Theta$, define the next state by the minimization problem
+\begin{equation}
+\theta_{k+1}
+=
+\arg\min_{\theta \in \Theta}
+\left\{
+\mathcal{E}(\theta)
++
+\frac{1}{2\eta} \|\theta - \theta_k\|^2
+\right\}.
+\end{equation}
+
+This scheme selects the subsequent state by balancing two competing effects:
+\begin{itemize}
+\item reduction of the energy $\mathcal{E}$,
+\item proximity to the previous state $\theta_k$.
+\end{itemize}
+
+Unlike stationary action, which selects entire trajectories through a global extremization principle, the minimizing movement scheme determines evolution incrementally through a sequence of local variational problems over states.
+
+As $\eta \to 0$, the piecewise-linear interpolation of the discrete iterates converges, under suitable regularity assumptions, to the solution of the gradient flow equation
+\begin{equation}
+\dot{\theta}(t) = - \nabla \mathcal{E}(\theta(t)).
+\end{equation}
+
+In this sense, gradient flow may be understood as the continuous-time limit of a time-discrete variational principle. Dissipation therefore arises not from stationary action over trajectories, but from successive minimization of energy penalized by a metric cost of motion.
+
+Stationary action extremizes a functional over curves in configuration space, whereas minimizing movements extremize a functional over successive states in metric space. The former produces conservative dynamics; the latter generates dissipative evolution.
+
+\subsection{Gradient Flow on a Riemannian Manifold}
+
+The notion of gradient depends fundamentally on the underlying metric structure of the state space. To make this dependence explicit, let $(M,g)$ be a Riemannian manifold and let $\mathcal{E} : M \to \mathbb{R}$ be a smooth energy functional.
+
+At each point $\theta \in M$, the differential $d\mathcal{E}_\theta$ defines a covector in the cotangent space $T_\theta^* M$. The Riemannian metric $g$ induces an identification between tangent and cotangent spaces, allowing one to define the Riemannian gradient $\nabla_g \mathcal{E}$ implicitly by
+\begin{equation}
+g_\theta(\nabla_g \mathcal{E}, v) = d\mathcal{E}_\theta(v)
+\quad \text{for all } v \in T_\theta M.
+\end{equation}
+
+The gradient flow of $\mathcal{E}$ with respect to the metric $g$ is then defined by
+\begin{equation}
+\dot{\theta}(t) = - \nabla_g \mathcal{E}(\theta(t)).
+\end{equation}
+
+Along any sufficiently smooth solution of this equation, the energy evolves according to
+\begin{equation}
+\frac{d}{dt} \mathcal{E}(\theta(t))
+= d\mathcal{E}_\theta(\dot{\theta})
+= - g_\theta(\nabla_g \mathcal{E}, \nabla_g \mathcal{E})
+= - \|\nabla_g \mathcal{E}\|_g^2 \le 0.
+\end{equation}
+
+Thus the dissipative character of the dynamics is preserved under arbitrary choices of Riemannian geometry: the energy decreases at a rate determined by the squared norm of its gradient with respect to the metric $g$.
+
+\subsection{Conservative and Dissipative Variational Structures}
+
+The preceding sections exhibit two distinct variational paradigms. Classical mechanics arises from stationarity of an action functional over trajectories and yields conservative dynamics. Learning dynamics, by contrast, arise from gradient flow of an energy functional and yield dissipative evolution.
+
+The structural differences may be summarized as follows:
+
+\begin{center}
+\begin{tabular}{l|l}
+\textbf{Conservative Dynamics} & \textbf{Dissipative Dynamics} \\
+\hline
+Action functional over trajectories & Energy functional over states \\
+Euler--Lagrange / Hamiltonian equations & Gradient flow equations \\
+Second-order in time & First-order in time \\
+Energy preserved ($\frac{dH}{dt}=0$) & Energy decreases ($\frac{d\mathcal{E}}{dt} \le 0$) \\
+Symplectic structure & Metric structure \\
+\end{tabular}
+\end{center}
+
+Conservative systems preserve geometric structure and exhibit reversible evolution. Dissipative systems contract energy and generically exhibit irreversible behavior. While both arise from variational principles, the nature of the extremization differs fundamentally: stationary action selects entire trajectories, whereas gradient flow emerges from successive minimization of energy relative to a metric cost of motion.
+
+
 \end{document}
+
+
