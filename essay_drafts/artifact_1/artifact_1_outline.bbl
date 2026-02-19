@@ -1,0 +1,96 @@
+\begin{thebibliography}{10}
+
+\bibitem{amari1998}
+Shun-ichi Amari.
+\newblock Natural gradient works efficiently in learning.
+\newblock {\em Neural Computation}, 10(2):251--276, 1998.
+
+\bibitem{ambrosio2008}
+Luigi Ambrosio, Nicola Gigli, and Giuseppe Savar\'e.
+\newblock {\em Gradient Flows in Metric Spaces and in the Space of Probability
+  Measures}.
+\newblock Birkh\"auser, 2nd edition, 2008.
+
+\bibitem{arnold1989}
+Vladimir~I. Arnold.
+\newblock {\em Mathematical Methods of Classical Mechanics}.
+\newblock Springer, 2nd edition, 1989.
+
+\bibitem{blei2017}
+David~M. Blei, Alp Kucukelbir, and Jon~D. McAuliffe.
+\newblock Variational inference: A review for statisticians.
+\newblock {\em Journal of the American Statistical Association},
+  112(518):859--877, 2017.
+
+\bibitem{goldstein2001}
+Herbert Goldstein, Charles Poole, and John Safko.
+\newblock {\em Classical Mechanics}.
+\newblock Addison-Wesley, 3rd edition, 2001.
+
+\bibitem{ho2020}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock In {\em Advances in Neural Information Processing Systems
+  ({NeurIPS})}, volume~33, pages 6840--6851, 2020.
+
+\bibitem{jordan1998}
+Richard Jordan, David Kinderlehrer, and Felix Otto.
+\newblock The variational formulation of the {Fokker--Planck} equation.
+\newblock {\em SIAM Journal on Mathematical Analysis}, 29(1):1--17, 1998.
+
+\bibitem{kullback1951}
+Solomon Kullback and Richard~A. Leibler.
+\newblock On information and sufficiency.
+\newblock {\em The Annals of Mathematical Statistics}, 22(1):79--86, 1951.
+
+\bibitem{langevin1908}
+Paul Langevin.
+\newblock Sur la th\'eorie du mouvement brownien.
+\newblock {\em Comptes Rendus de l'Acad\'emie des Sciences}, 146:530--533,
+  1908.
+
+\bibitem{leonard2014}
+Christian L\'eonard.
+\newblock A survey of the {Schr\"odinger} problem and some of its connections
+  with optimal transport.
+\newblock {\em Discrete and Continuous Dynamical Systems - Series A},
+  34(4):1533--1574, 2014.
+
+\bibitem{nemirovski1983}
+Arkadii Nemirovski and David Yudin.
+\newblock {\em Problem Complexity and Method Efficiency in Optimization}.
+\newblock John Wiley \& Sons, 1983.
+
+\bibitem{otto2001}
+Felix Otto.
+\newblock The geometry of dissipative evolution equations: the porous medium
+  equation.
+\newblock {\em Communications in Partial Differential Equations},
+  26(1-2):101--174, 2001.
+
+\bibitem{risken1996}
+Hannes Risken.
+\newblock {\em The {Fokker--Planck} Equation: Methods of Solution and
+  Applications}, volume~18 of {\em Springer Series in Synergetics}.
+\newblock Springer, 2nd edition, 1996.
+
+\bibitem{song2021}
+Yang Song, Chen Meng, and Stefano Ermon.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock In {\em International Conference on Learning Representations
+  ({ICLR})}, 2021.
+
+\bibitem{villani2009}
+C\'edric Villani.
+\newblock {\em Optimal Transport: Old and New}, volume 338 of {\em Grundlehren
+  der mathematischen Wissenschaften}.
+\newblock Springer, 2009.
+
+\bibitem{welling2011}
+Max Welling and Yee~Whye Teh.
+\newblock Bayesian learning via stochastic gradient {Langevin} dynamics.
+\newblock In {\em Proceedings of the 28th International Conference on Machine
+  Learning ({ICML})}, pages 681--688, 2011.
+
+\end{thebibliography}

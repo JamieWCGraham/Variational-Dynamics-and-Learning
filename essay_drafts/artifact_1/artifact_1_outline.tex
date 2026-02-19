@@ -4,32 +4,40 @@
 \setlength{\parindent}{0pt} % Removes paragraph indentation
 \setlength{\parskip}{0.5\baselineskip} % Adds half a line of space between paragraphs
 \geometry{margin=1in}
+\usepackage{cite}
 
-\title{A Variational and Geometric Perspective on Learning Dynamics}
-\author{Jamie Graham}
-\date{2026}
+\title{Variational Flows in Learning: Geometry, Thermodynamics, and Distribution-Space Dynamics}
+\author{Jamie Graham\\[0.5em]
+\normalsize\texttt{jgrah52@uwo.ca}\\
+\normalsize University of Western Ontario}
+\date{March 2026}
 \begin{document}
 \maketitle
 
-We present an integrated variational--geometric perspective on learning dynamics and identify structural principles shared across optimization, inference, and generative modeling.
+\begin{abstract}    
+    We present a variational--geometric perspective on learning dynamics that highlights a small set of structural ingredients shared across optimization, inference, and generative modeling. We begin by contrasting conservative dynamics arising from stationary action in classical mechanics with the intrinsically dissipative dynamics of learning, modeled as gradient flows of an energy functional on parameter space. We then introduce stochastic extensions via Langevin-type dynamics, which lift parameter trajectories to evolving laws and endow learning with thermodynamic structure: an invariant Gibbs measure, a Fokker--Planck description in distribution space, and a free-energy Lyapunov functional exhibiting monotone dissipation. Building on this, we formulate distribution-space dynamics on $\mathcal{P}(\Theta)$ and emphasize that ``steepest descent'' depends on the chosen geometry, focusing on Wasserstein (transport) and KL/Fisher (information) structures and their associated minimizing-movement schemes. Finally, we show how deterministic optimization, stochastic gradient methods, variational inference, and diffusion models arise as specializations corresponding to different choices of state variable (parameters vs.\ measures), functional (energy, free energy, KL), geometry (Euclidean/Riemannian, Wasserstein, KL/Fisher), and stochasticity. The resulting framework does not identify learning with mechanics, but organizes modern learning algorithms as variational flows under prescribed geometric and thermodynamic structure, suggesting a principled lens for analyzing and designing optimizers and generative procedures. This survey is intended to be self-contained and does not assume prior exposure to optimal transport or information geometry.
+\end{abstract}
 
 \section{Central Questions}
 
 \begin{itemize}
+
+    
 \item What structural principles govern the dynamics of learning, and how do variational and geometric ideas clarify their relationships?
 \item In what precise sense can learning dynamics be understood as variational flows of energy functionals under chosen geometric and stochastic structures?
-\item What is the minimal geometric and variational structure required to describe modern learning algorithms?
 \item Can deterministic optimization, stochastic gradient methods, variational inference, and diffusion be described within a common variational--geometric framework, and what structural elements differentiate them?
+% \item What is the minimal geometric and variational structure required to describe modern learning algorithms?
+% \item Can learning be formulated as a controlled interpolation between symplectic and metric flows?
+% \item Is there a geometric parameter that tunes between exploration and contraction?
+% \item Can we design optimizers that preserve certain geometric invariants before introducing dissipation?
+% \item Is momentum best understood as weakly broken symplectic structure?
+
+
 \end{itemize}
 
-\section{Core Sections}
-\begin{itemize}
-\item Variational Mechanics
-\item Gradient Flows as Dissipative Variational Systems
-\item Stochastic Extensions and Thermodynamic Structure
-\item Distribution-Space Dynamics
-\item Connections to Optimization, VI, Diffusion
-\end{itemize}
+\section{Outline}
+
+We first review variational mechanics and the Euler--Lagrange framework (Section~3), then contrast it with gradient flows as dissipative variational systems (Section~4). Stochastic extensions via Langevin dynamics and their thermodynamic structure are developed in Section~5, followed by distribution-space dynamics on $\mathcal{P}(\Theta)$ and the role of Wasserstein versus KL geometry (Section~6). Section~7 connects these structures to deterministic optimization, stochastic gradient methods, variational inference, and diffusion models.
 
 \section{Variational Mechanics and Trajectory Optimization}
 
@@ -124,7 +132,7 @@ where $\mathcal{F}$ is a space of functions (such as continuous or differentiabl
 
 A Lagrangian $L(q, \dot{q}, t)$ is a mathematical function that summarizes how a physical system moves by describing the balance between motion and stored energy. It is typically written as a function of a system's coordinates $q$, their rates of change $\dot{q}$, and time $t$, and it encodes the rules governing the system's dynamics. Instead of directly computing forces like in Newtonian mechanics, the Lagrangian allows us to determine motion by identifying the path a system takes between two configurations. This is done by constructing a quantity called the action and finding the path that makes this quantity \textbf{stationary} (often minimal in physical systems).
 
-Lagrangians can be thought of as a \textbf{cost density} or a \textbf{scoring rule} that tells us how ``favorable'' or ``natural'' a system's motion is at each moment in time. At its core often in classical mechanics, it measures a balance between two competing tendencies: kinetic energy $T$, which reflects how strongly a system is moving or spreading its motion, and potential energy $V$, which reflects how strongly the system is being pulled toward or held by its environment. The difference $T - V$ can be thought of as measuring how freely the system is able to move relative to how constrained or trapped it is. If kinetic energy is large compared to potential energy, the system is moving freely; if potential energy dominates, the system is strongly restricted by forces or stored energy. You can imagine it like a traveler balancing momentum with terrain: $T$ rewards motion and exploration, while $V$ represents hills, valleys, or constraints that shape which routes are natural or costly. The system's actual motion is determined by combining this balance over time into a total quantity called the action and selecting the path that makes this total score \textbf{stationary} (often minimal in physical systems). This viewpoint matters because it reframes ``solving the equations of motion'' as an optimization-style problem over trajectories. That is to say, variational mechanics reformulates dynamics as optimization over function spaces.
+Lagrangians can be thought of as a \textbf{cost density} or a \textbf{scoring rule} that tells us how ``favorable'' or ``natural'' a system's motion is at each moment in time. At its core often in classical mechanics, it measures a balance between two competing tendencies: kinetic energy $T$, which reflects how strongly a system is moving or spreading its motion, and potential energy $V$, which reflects how strongly the system is being pulled toward or held by its environment. The difference $T - V$ can be thought of as measuring how freely the system is able to move relative to how constrained or trapped it is. If kinetic energy is large compared to potential energy, the system is moving freely; if potential energy dominates, the system is strongly restricted by forces or stored energy. You can imagine it like a traveler balancing momentum with terrain: $T$ rewards motion and exploration, while $V$ represents hills, valleys, or constraints that shape which routes are natural or costly. The system's actual motion is determined by combining this balance over time into a total quantity called the action and selecting the path that makes this total score \textbf{stationary} (often minimal in physical systems). This viewpoint matters because it reframes ``solving the equations of motion'' as an optimization-style problem over trajectories. That is to say, variational mechanics reformulates dynamics as optimization over function spaces \cite{goldstein2001,arnold1989}.
 
 We will use the following \textbf{running example} throughout this section.
 
@@ -157,10 +165,10 @@ Typically, one varies over trajectories satisfying boundary conditions $q(t_0)=q
 
 \subsection{Toward the Euler--Lagrange Equation}
 
-Knowing that physical trajectories are those that make the action stationary is not yet enough to \emph{compute} them. We need a \textbf{local} condition---a differential equation---that a curve must satisfy at each time if it is to extremize $S$. That condition is the \textbf{Euler--Lagrange equation}.
+Knowing that physical trajectories are those that make the action stationary is not yet enough to \emph{compute} them. We need a \textbf{local} condition---a differential equation---that a curve must satisfy at each time if it is to extremize $S$. That condition is the \textbf{Euler--Lagrange equation}:
 \begin{equation}
-\frac{\partial L}{\partial x} -
-\frac{d}{dt} \frac{\partial L}{\partial \dot{x}}  = 0
+\frac{\partial L}{\partial q} -
+\frac{d}{dt} \frac{\partial L}{\partial \dot{q}}  = 0.
 \end{equation}
 
 We will motivate that this condition emerges naturally from the stationarity condition on the action functional. Consider this as an analogue of setting the derivative to zero in ordinary calculus: instead of ``derivative of a function equals zero at a critical point,'' we get ``a certain combination of derivatives of $L$ evaluated along the curve equals zero at each time.''
@@ -187,7 +195,7 @@ Altogether, this gives us
 + \frac{\partial L}{\partial \dot{q}} \dot{\eta}\right) dt = 0
 \end{equation}
 
-This shows that the variation of the action functional is seperable into a term that encodes sensitivity to position as well as senstitivity to velocity, hinting that motion depends on both.
+This shows that the variation of the action functional is separable into a term that encodes sensitivity to position as well as sensitivity to velocity, hinting that motion depends on both.
 
 We now perform a trick on the second term, using integration by parts.
 \begin{equation}
@@ -213,15 +221,12 @@ So we obtain:
 dt = 0
 \end{equation}
 
-Note now that the variation of $S$ collapses into a single term multiplied by an arbitary smooth function $\eta(t)$, yet in order for the action to be stationary for all admissable variations, the integral must be equal to zero. Since $\eta(t)$ is arbitary, the only way this is possible is if the condition
+Note now that the variation of $S$ collapses into a single term multiplied by an arbitrary smooth function $\eta(t)$, yet in order for the action to be stationary for all admissible variations, the integral must be equal to zero. Since $\eta(t)$ is arbitrary, the only way this is possible is if the condition
 \begin{equation}
 \frac{\partial L}{\partial q} -
 \frac{d}{dt} \frac{\partial L}{\partial \dot{q}}  = 0
 \end{equation}
 which is the Euler-Lagrange equation, so we are done.
-\begin{equation}
-\square
-\end{equation}
 
 Intuitively, we see that the Euler-Lagrange equation emerges as a local constraint on the Lagrangian, following from extremizing the action functional $S$.
 
@@ -250,7 +255,7 @@ In one dimension, we note that the partial derivative of the Lagrangian with res
 \frac{\partial L}{\partial x} = -\frac{\partial V}{\partial x} = -\nabla V
 \end{equation}
 
-Note that taking the derivative of the lagrangian with resepect to velocity gives
+Note that taking the derivative of the Lagrangian with respect to velocity gives
 \begin{equation}
 \frac{\partial L}{\partial \dot{x}} = m\dot{x}
 \end{equation}
@@ -274,15 +279,13 @@ Local dynamics (the ODE at each instant) emerges from global optimization (extre
 
 \subsection{From Stationary Action to Energy Dissipation}
 
-In classical variational mechanics, trajectories arise from the stationarity of an action functional. Under suitable regularity assumptions, this yields Euler–Lagrange equations whose associated dynamics are typically conservative. In particular, for time-independent Lagrangians, the Hamiltonian energy
-\begin{equation}
-H(q,\dot q)
-\end{equation}
-is preserved along trajectories:
+In the previous section, the system's path was chosen by making a single number---the action---stationary, and energy was conserved. In learning, we want the opposite: we want a quantity (the loss) to \emph{decrease} over time.
+
+In classical variational mechanics, trajectories arise from the stationarity of an action functional. Under suitable regularity assumptions, this yields Euler--Lagrange equations whose associated dynamics are typically conservative. The \textbf{Hamiltonian} $H(q,\dot q)$ is the total energy; for our running example it is $T + V$. In particular, for time-independent Lagrangians, $H$, defined by $H = p \cdot \dot q - L$ with momentum $p = \partial L/\partial \dot q$ (or equivalently $H = T + V$ for standard mechanical Lagrangians), is preserved along trajectories:
 \begin{equation}
 \frac{d}{dt} H(q(t),\dot q(t)) = 0.
 \end{equation}
-The variational principle therefore selects trajectories consistent with energy conservation rather than energy decay.
+The variational principle therefore selects trajectories consistent with energy conservation rather than energy decay. Nature picks a path that conserves energy; training picks a path that drains the loss.
 
 Learning dynamics, by contrast, are intrinsically dissipative. Let
 \begin{equation}
@@ -301,14 +304,14 @@ In the context of supervised learning, the energy functional $\mathcal{E}$ may r
 \mathcal{E}(\theta) = \frac{1}{n} \sum_{i=1}^n \ell(f_\theta(x_i), y_i),
 \end{equation}
 
-where $f_\theta$ is a parameterized model and $\ell$ a loss function. More generally, $\mathcal{E}$ may denote any differentiable objective functional whose minimization defines the learning problem.
+where $f_\theta$ is a parameterized model and $\ell$ a loss function. So $\mathcal{E}(\theta)$ is the average error on the training set; we want to drive it down. More generally, $\mathcal{E}$ may denote any differentiable objective functional whose minimization defines the learning problem.
 
 
 \subsection{Gradient Flow in Euclidean Parameter Space}
 
-A gradient flow is a continuous-time dynamical system that evolves according to the direction of steepest descent of an energy functional. 
+A gradient flow is the continuous-time version of ``always take a small step in the direction that decreases the energy the most.'' It is a continuous-time dynamical system that evolves according to the direction of steepest descent of an energy functional.
 
-The gradient flow of an energy functional is defined by the following differential equation:
+In calculus, steepest descent is the direction opposite to the gradient; here we turn that into an ODE. The gradient flow of an energy functional is defined by the following differential equation:
 
 \begin{equation}
 \dot{\theta}(t) = -\nabla \mathcal{E}(\theta(t)).
@@ -325,15 +328,15 @@ Substituting the gradient flow equation into the time derivative of the energy f
 \frac{d}{dt} \mathcal{E}(\theta(t)) = -\langle \nabla \mathcal{E}(\theta(t)), \nabla \mathcal{E}(\theta(t)) \rangle = - |\nabla \mathcal{E}(\theta(t))|^2 \le 0
 \end{equation}
 
-Thus the energy decreases monotonically along trajectories of the flow. In contrast to conservative Euler--Lagrange dynamics, where stationarity of an action yields energy preservation, gradient flow dynamics are intrinsically dissipative: the energy functional itself drives motion toward lower-energy configurations.
+So the energy never increases---it can only stay constant or decrease. Thus the energy decreases monotonically along trajectories of the flow. In contrast to conservative Euler--Lagrange dynamics, where stationarity of an action yields energy preservation, gradient flow dynamics are intrinsically dissipative: the energy functional itself drives motion toward lower-energy configurations.
 
-Importantly, the definition of the gradient depends on the underlying metric structure on $\Theta$. The Euclidean inner product induces the standard gradient operator; alternative choices of geometry give rise to distinct gradient flows.
+Importantly, the definition of the gradient depends on the underlying metric structure on $\Theta$. The Euclidean inner product induces the standard gradient operator; alternative choices of geometry give rise to distinct gradient flows. For now we use the usual Euclidean notion of length and angle.
 
 \subsection{Minimizing Movements: A Dissipative Variational Principle}
 
-Although gradient flow is defined as a differential equation, it admits an equivalent variational characterization. This formulation restores variational structure in a manner fundamentally distinct from stationary action.
+We can also describe gradient flow without writing an ODE: at each time step, choose the next point by making a single \emph{minimization} that balances ``get lower energy'' and ``don't move too far.'' Although gradient flow is defined as a differential equation, it admits an equivalent variational characterization \cite{ambrosio2008}. This formulation restores variational structure in a manner fundamentally distinct from stationary action.
 
-Let $\eta > 0$ be a time-step parameter. Given a current state $\theta_k \in \Theta$, define the next state by the minimization problem
+Think of it as: from $\theta_k$, where should I step so that I reduce $\mathcal{E}$ without jumping too far in one go? Let $\eta > 0$ be a time-step parameter. Given a current state $\theta_k \in \Theta$, define the next state by the minimization problem
 \begin{equation}
 \theta_{k+1}
 =
@@ -357,16 +360,17 @@ As $\eta \to 0$, the piecewise-linear interpolation of the discrete iterates con
 \begin{equation}
 \dot{\theta}(t) = - \nabla \mathcal{E}(\theta(t)).
 \end{equation}
+So the discrete ``minimize energy plus penalty'' steps blend into the continuous gradient flow.
 
 In this sense, gradient flow may be understood as the continuous-time limit of a time-discrete variational principle. Dissipation therefore arises not from stationary action over trajectories, but from successive minimization of energy penalized by a metric cost of motion.
 
-Stationary action extremizes a functional over curves in configuration space, whereas minimizing movements extremize a functional over successive states in metric space. The former produces conservative dynamics; the latter generates dissipative evolution.
+Stationary action picks a whole curve; minimizing movements pick the next point one step at a time. Stationary action extremizes a functional over curves in configuration space, whereas minimizing movements extremize a functional over successive states in metric space. The former produces conservative dynamics; the latter generates dissipative evolution.
 
 \subsection{Gradient Flow on a Riemannian Manifold}
 
-The notion of gradient depends fundamentally on the underlying metric structure of the state space. To make this dependence explicit, let $(M,g)$ be a Riemannian manifold and let $\mathcal{E} : M \to \mathbb{R}$ be a smooth energy functional.
+So far ``steepest'' meant steepest in the usual Euclidean sense. If we change how we measure lengths and angles (a Riemannian metric), the direction of steepest descent changes. The notion of gradient depends fundamentally on the underlying metric structure of the state space. To make this dependence explicit, let $(M,g)$ be a Riemannian manifold and let $\mathcal{E} : M \to \mathbb{R}$ be a smooth energy functional.
 
-At each point $\theta \in M$, the differential $d\mathcal{E}_\theta$ defines a covector in the cotangent space $T_\theta^* M$. The Riemannian metric $g$ induces an identification between tangent and cotangent spaces, allowing one to define the Riemannian gradient $\nabla_g \mathcal{E}$ implicitly by
+The derivative of $\mathcal{E}$ gives a covector (a linear map on tangent vectors); the metric turns that covector into a tangent vector, which we call the gradient. At each point $\theta \in M$, the differential $d\mathcal{E}_\theta$ defines a covector in the cotangent space $T_\theta^* M$. The Riemannian metric $g$ induces an identification between tangent and cotangent spaces, allowing one to define the Riemannian gradient $\nabla_g \mathcal{E}$ implicitly by
 \begin{equation}
 g_\theta(\nabla_g \mathcal{E}, v) = d\mathcal{E}_\theta(v)
 \quad \text{for all } v \in T_\theta M.
@@ -385,11 +389,11 @@ Along any sufficiently smooth solution of this equation, the energy evolves acco
 = - \|\nabla_g \mathcal{E}\|_g^2 \le 0.
 \end{equation}
 
-Thus the dissipative character of the dynamics is preserved under arbitrary choices of Riemannian geometry: the energy decreases at a rate determined by the squared norm of its gradient with respect to the metric $g$.
+Thus the dissipative character of the dynamics is preserved under arbitrary choices of Riemannian geometry: the energy decreases at a rate determined by the squared norm of its gradient with respect to the metric $g$. (On the sphere, for example, the Riemannian gradient is the projection of the Euclidean gradient onto the tangent plane.)
 
 \subsection{Conservative and Dissipative Variational Structures}
 
-The preceding sections exhibit two distinct variational paradigms. Classical mechanics arises from stationarity of an action functional over trajectories and yields conservative dynamics. Learning dynamics, by contrast, arise from gradient flow of an energy functional and yield dissipative evolution.
+We now summarize the two variational pictures side by side: one for mechanics (conservative) and one for learning (dissipative). The preceding sections exhibit two distinct variational paradigms. Classical mechanics arises from stationarity of an action functional over trajectories and yields conservative dynamics. Learning dynamics, by contrast, arise from gradient flow of an energy functional and yield dissipative evolution.
 
 The structural differences may be summarized as follows:
 
@@ -404,9 +408,486 @@ Energy preserved ($\frac{dH}{dt}=0$) & Energy decreases ($\frac{d\mathcal{E}}{dt
 Symplectic structure & Metric structure \\
 \end{tabular}
 \end{center}
+So the same idea---extremize a functional---leads to opposite behavior depending on \emph{what} we extremize and \emph{over what} (curves vs single states).
 
 Conservative systems preserve geometric structure and exhibit reversible evolution. Dissipative systems contract energy and generically exhibit irreversible behavior. While both arise from variational principles, the nature of the extremization differs fundamentally: stationary action selects entire trajectories, whereas gradient flow emerges from successive minimization of energy relative to a metric cost of motion.
 
+
+\section{Stochastic Extensions and Thermodynamic Structure}
+
+So far we have imagined a single trajectory sliding downhill. Real training is noisy; this section makes that noise explicit and shows it gives the system a thermodynamic structure: an equilibrium distribution (Gibbs measure), a PDE describing how probability mass evolves (Fokker--Planck), and a quantity that always decreases (free energy). These ideas underpin both stochastic optimization and, later, variational inference and diffusion models.
+
+\subsection{Why Stochasticity? Fluctuations, Finite Data, and Exploration}
+
+Deterministic gradient flows provide an idealized continuous-time description of learning as dissipative motion in parameter space. However, modern training procedures are intrinsically stochastic for at least three reasons.
+
+\begin{itemize}
+\item \textbf{Minibatch gradients.} In large-scale learning, the loss $\mathcal{E}(\theta)$ is often a sum over many data points. Computing the full gradient is costly, so we estimate it from a random subset (a minibatch). That estimate is noisy---it fluctuates around the true gradient---so the effective dynamics are stochastic.
+\item \textbf{Finite data.} Even with the full dataset, the empirical risk is only an approximation to the true population risk. Sampling uncertainty and model misspecification introduce randomness that is often modeled as effective noise on the parameters.
+\item \textbf{Exploration.} In nonconvex settings, purely deterministic descent can get stuck in local minima or saddle regions. Injecting noise allows the system to ``kick'' out of shallow basins and explore the energy landscape, often improving generalization and convergence to flatter minima.
+\end{itemize}
+
+A natural way to add noise is to replace the ODE by a stochastic differential equation: the same drift term plus a random kick at each instant. A natural mathematical extension therefore replaces the ODE
+\begin{equation}
+\dot{\theta}(t) = - \nabla_g \mathcal{E}(\theta(t))
+\end{equation}
+by a \textbf{stochastic differential equation (SDE)} on parameter space:
+\begin{equation}
+d\theta_t = b(\theta_t,t)\,dt + \sigma(\theta_t,t)\, dW_t,
+\end{equation}
+where $b$ is a \textbf{drift} (deterministic push), $\sigma$ controls the strength of random kicks, and $W_t$ is a \textbf{Wiener process} (standard Brownian motion). Informally, $dW_t$ is a tiny random nudge whose size is of order $\sqrt{dt}$; over time these increments add up to continuous but nowhere differentiable paths. Rigorous treatment requires stochastic calculus (It\^o or Stratonovich); for our purposes it suffices to think of the SDE as ``gradient descent plus random noise whose magnitude is set by $\sigma$.''
+
+This formulation introduces a \textbf{dual viewpoint}: one may study (i) \emph{individual sample paths} $\theta_t(\omega)$ (a single run of the process) and (ii) the \emph{evolution of the law} $\rho_t$ of $\theta_t$ on $\Theta$ (how the distribution over parameters changes over time). The second viewpoint will lead to a PDE for the density $\rho_t$ and to gradient flows on the space of measures.
+
+\subsection{Overdamped Langevin Dynamics as Noisy Gradient Flow}
+
+The standard stochastic version of gradient descent is \textbf{overdamped Langevin dynamics}: gradient drift plus white noise \cite{langevin1908}:
+\begin{equation}
+d\theta_t = - \nabla \mathcal{E}(\theta_t)\, dt + \sqrt{2\beta^{-1}}\, dW_t,
+\label{eq:langevin}
+\end{equation}
+where $\beta^{-1}$ acts like a temperature: larger $\beta^{-1}$ means more noise. When $\beta \to \infty$, the noise vanishes and \eqref{eq:langevin} formally reduces to deterministic gradient flow; when $\beta$ is finite, the dynamics balance descent with random kicks.
+
+\textbf{Interpretation.}
+The drift term $- \nabla \mathcal{E}(\theta_t)\, dt$ drives the system toward lower energy (dissipation), while $\sqrt{2\beta^{-1}}\, dW_t$ injects unbiased fluctuations (exploration). The factor $\sqrt{2\beta^{-1}}$ is chosen so that, as we will see, the equilibrium distribution has a clean Gibbs form. The resulting dynamics are \emph{irreversible}: they do not preserve phase-space volume and naturally admit a thermodynamic structure with a distinguished equilibrium state.
+
+\textbf{Example (one dimension).}
+Let $\Theta = \mathbb{R}$ and $\mathcal{E}(\theta) = \frac{1}{2}\theta^2$ (a quadratic well). Then \eqref{eq:langevin} reads $d\theta_t = -\theta_t\, dt + \sqrt{2\beta^{-1}}\, dW_t$. The drift pulls $\theta$ toward zero; the noise spreads it. So the drift pulls toward zero while the noise spreads the distribution; at long times they balance at the Gibbs distribution---the distribution of $\theta_t$ converges to a Gaussian centered at zero with variance $\beta^{-1}$, which is exactly the Gibbs measure $Z^{-1}e^{-\beta \mathcal{E}(\theta)}$ for this $\mathcal{E}$.
+
+\subsection{Stationary Measures and the Gibbs Distribution}
+
+If we run Langevin forever, the distribution of $\theta_t$ typically settles down to a fixed distribution $\rho_\infty$ that no longer changes in time. Under suitable regularity and growth assumptions on $\mathcal{E}$ (e.g., $\mathcal{E}$ smooth and growing sufficiently at infinity so that $Z < \infty$), Langevin dynamics admits a unique \textbf{invariant} (stationary) measure: if $\theta_0 \sim \rho_\infty$, then $\theta_t \sim \rho_\infty$ for all $t \ge 0$. That equilibrium distribution has a standard form from statistical physics: it is proportional to $e^{-\beta \mathcal{E}(\theta)}$. That measure has the \textbf{Gibbs} (or \textbf{Boltzmann}) form:
+\begin{equation}
+\rho_\infty(\theta) = Z^{-1} e^{-\beta \mathcal{E}(\theta)},
+\qquad
+Z = \int_\Theta e^{-\beta \mathcal{E}(\theta)}\, d\theta.
+\label{eq:gibbs}
+\end{equation}
+The normalizing constant $Z$ is the \textbf{partition function}; it ensures $\int \rho_\infty(\theta)\, d\theta = 1$. So $Z$ is just the constant that makes the total probability equal to 1.
+
+\textbf{Intuition.}
+The stochastic flow does not (in general) converge to a single minimizer; rather it approaches a \emph{distribution} concentrated near low-energy regions. The parameter $\beta$ (inverse temperature) controls the tradeoff: large $\beta$ (low temperature) sharpens $\rho_\infty$ around minima, so the process spends most of its time near the lowest energy; small $\beta$ (high temperature) spreads the distribution, so higher-energy regions retain more probability mass. In the limit of zero temperature ($\beta \to \infty$), all mass concentrates at the minimizer(s) of $\mathcal{E}$; in that sense ``cooling'' recovers deterministic optimization. This equilibrium picture is central to both statistical physics and Bayesian inference: the Gibbs measure is the posterior in many statistical models when $\mathcal{E}$ is the negative log-posterior.
+
+\subsection{From Sample Paths to Densities: The Fokker--Planck Equation}
+
+So far we followed a single random trajectory $\theta_t$. Equally important is how the \emph{probability density} of $\theta_t$ evolves---that is described by a deterministic PDE. Its \textbf{law} is the probability density $\rho_t(\theta)$ such that $\mathbb{P}(\theta_t \in A) = \int_A \rho_t(\theta)\, d\theta$. How does $\rho_t$ change in time?
+
+The density $\rho_t$ associated with the Langevin SDE \eqref{eq:langevin} satisfies the \textbf{Fokker--Planck} (or \textbf{Kolmogorov forward}) equation \cite{risken1996}:
+\begin{equation}
+\partial_t \rho_t
+= \nabla \cdot (\rho_t \nabla \mathcal{E})
++ \beta^{-1}\Delta \rho_t.
+\label{eq:fokkerplanck}
+\end{equation}
+So the Fokker--Planck equation is the continuity equation for the density of a cloud of particles following the SDE. Derivation (sketch): the SDE describes how individual particles move; the flux of probability has two contributions: a \textbf{drift} term (mass is advected by the vector field $-\nabla \mathcal{E}$) and a \textbf{diffusion} term (mass spreads by Brownian motion). Collecting the divergence of the total flux yields \eqref{eq:fokkerplanck}.
+
+This PDE makes explicit the two competing effects:
+\begin{itemize}
+\item \textbf{Drift} toward low energy: $\nabla \cdot (\rho_t \nabla \mathcal{E})$ describes probability mass being pushed in the direction $-\nabla \mathcal{E}$, i.e., downhill on the energy landscape. This term alone would concentrate $\rho_t$ at minima.
+\item \textbf{Diffusion}: $\beta^{-1}\Delta \rho_t = \beta^{-1}\nabla\cdot(\nabla \rho_t)$ is the Laplacian of the density; it tends to flatten $\rho_t$ and increase entropy. It opposes the concentration induced by the drift.
+\end{itemize}
+Drift concentrates mass downhill; diffusion spreads it. At equilibrium they balance, and $\partial_t \rho_t = 0$ yields $\rho_\infty \propto e^{-\beta \mathcal{E}}$ as in \eqref{eq:gibbs}.
+
+\subsection{Free Energy as a Lyapunov Functional}
+
+There is a single quantity on the space of densities that always decreases along the Fokker--Planck flow: the free energy. It plays the role of a Lyapunov function. A central thermodynamic quantity is the \textbf{(Helmholtz) free energy} functional on densities. Free energy has two parts: expected energy (penalizes mass on high-$\mathcal{E}$ regions) and an entropy term (penalizes overly concentrated densities):
+\begin{equation}
+\mathcal{F}(\rho)
+=
+\int_\Theta \mathcal{E}(\theta)\,\rho(\theta)\, d\theta
++
+\beta^{-1}\int_\Theta \rho(\theta)\log \rho(\theta)\, d\theta.
+\label{eq:freeenergy}
+\end{equation}
+\begin{itemize}
+\item The first term is the \textbf{expected energy} $\mathbb{E}_\rho[\mathcal{E}]$: it penalizes placing probability mass on high-energy regions.
+\item The second term is $\beta^{-1}$ times the \textbf{negative entropy} $-\int \rho \log \rho$ (or entropy with a sign convention). Entropy is maximized by a uniform distribution; so this term penalizes overly concentrated $\rho$ and encourages spreading.
+\end{itemize}
+The competition between ``low energy'' and ``high entropy'' formalizes the exploration--exploitation tradeoff: the Gibbs measure $\rho_\infty$ is precisely the minimizer of $\mathcal{F}$, balancing concentration near minima with dispersion. So the Gibbs measure is the unique equilibrium both for the SDE and for the free energy.
+
+Equivalently, $\mathcal{F}$ can be written in terms of the Gibbs measure $\rho_\infty$:
+\begin{equation}
+\mathcal{F}(\rho) - \mathcal{F}(\rho_\infty)
+= \beta^{-1}\, \mathrm{KL}(\rho \,\|\, \rho_\infty),
+\label{eq:klfree}
+\end{equation}
+where $\mathrm{KL}(\rho \| \rho_\infty) = \int \rho \log(\rho/\rho_\infty)\, d\theta$ is the \textbf{Kullback--Leibler divergence} \cite{kullback1951}. So minimizing free energy is the same as driving $\rho$ toward $\rho_\infty$.
+
+\textbf{Energy dissipation in distribution space.}
+Along solutions of the Fokker--Planck equation \eqref{eq:fokkerplanck}, the free energy decreases monotonically:
+\begin{equation}
+\frac{d}{dt}\mathcal{F}(\rho_t) \le 0,
+\end{equation}
+with a precise dissipation identity (under suitable regularity) of the form
+\begin{equation}
+\frac{d}{dt}\mathcal{F}(\rho_t)
+=
+- \int_\Theta \rho_t(\theta)\,
+\left\|\nabla\left(\mathcal{E}(\theta)+\beta^{-1}\log \rho_t(\theta)\right)\right\|^2\, d\theta
+\le 0.
+\label{eq:freediss}
+\end{equation}
+The integrand is the squared norm of the \textbf{score} (or chemical potential gradient); it is zero only when $\rho_t = \rho_\infty$. So the system relaxes to $\rho_\infty$ by flowing downhill in free energy. Thus Langevin dynamics may be viewed as a \emph{gradient flow of free energy} in an appropriate geometry on probability measures---a perspective we make explicit in the next section.
+
+\subsection{A Variational Viewpoint: Minimizing Movements for Measures}
+
+Just as gradient flow in parameter space had a minimizing-movement formulation, the Fokker--Planck flow can be obtained by a sequence of minimizations over probability measures. The minimizing movement scheme of Section~4 extends naturally to the space of probability measures. In particular, the Fokker--Planck equation \eqref{eq:fokkerplanck} arises as the continuous-time limit of the \textbf{Jordan--Kinderlehrer--Otto (JKO)} scheme \cite{jordan1998}. Here $W_2$ measures the cost of rearranging one distribution into another by moving mass; it is the ``earth mover's'' distance:
+\begin{equation}
+\rho_{k+1}
+=
+\arg\min_{\rho}
+\left\{
+\mathcal{F}(\rho)
++
+\frac{1}{2\eta} W_2^2(\rho,\rho_k)
+\right\},
+\label{eq:jko}
+\end{equation}
+At each step we choose the next distribution $\rho_{k+1}$ by minimizing free energy $\mathcal{F}(\rho)$ while penalizing how ``far'' $\rho$ is from $\rho_k$ in transport cost. As the time step tends to zero, these discrete updates converge to the Fokker--Planck equation, so diffusion is steepest descent of free energy in Wasserstein geometry. This provides a purely variational characterization of thermodynamic relaxation, directly paralleling minimizing movements in parameter space.
+
+\subsection{Connection to Learning: SGD as Approximate Langevin Dynamics}
+
+Stochastic gradient descent uses a noisy gradient; under certain conditions, that noise can be approximated by a Langevin-type SDE. SGD updates
+\begin{equation}
+\theta_{k+1} = \theta_k - \eta\, \widehat{\nabla \mathcal{E}}(\theta_k)
+\end{equation}
+use a noisy gradient estimator $\widehat{\nabla \mathcal{E}}$ (e.g., the gradient of the loss on a random minibatch). Write $\widehat{\nabla \mathcal{E}}(\theta) = \nabla \mathcal{E}(\theta) + \xi$, where $\xi$ is the error. In regimes where the minibatch is large enough that $\xi$ is approximately Gaussian with covariance $\Sigma(\theta)$, the continuous-time limit of SGD (with step size $\eta \to 0$ and appropriate scaling) is often approximated by an SDE of Langevin type \cite{welling2011}:
+\begin{equation}
+d\theta_t \approx - \nabla \mathcal{E}(\theta_t)\,dt + (\eta \Sigma(\theta_t))^{1/2}\, dW_t.
+\end{equation}
+So SGD behaves like Langevin dynamics with a \emph{parameter-dependent} noise strength. So SGD both minimizes the loss and implicitly samples from a distribution shaped by the loss and the noise. This viewpoint suggests that learning may be interpreted simultaneously as:
+\begin{itemize}
+\item \textbf{Optimization} toward low loss (the drift term), and
+\item \textbf{Sampling} from an implicit distribution shaped by the noise and the energy landscape---with implications for generalization and flat minima.
+\end{itemize}
+
+\subsection{Momentum and Underdamped Langevin}
+
+Many optimizers use momentum: the update depends on an accumulated velocity, not just the current gradient. That corresponds to underdamped Langevin, which has a momentum variable. The overdamped Langevin equation \eqref{eq:langevin} is first-order in time: the state is $\theta_t$ and there is no explicit momentum. In many optimization settings, however, \textbf{momentum} is used (e.g., SGD with momentum, Adam): the update depends not only on the current gradient but on an accumulated velocity. This can be viewed as a discretization of \textbf{underdamped} (or \textbf{kinetic}) Langevin dynamics. The state is now $(\theta_t, p_t)$: position and momentum. The dynamics are second-order, like in mechanics, but with friction and noise:
+\begin{equation}
+d\theta_t = p_t\, dt, \qquad dp_t = -\nabla \mathcal{E}(\theta_t)\, dt - \gamma p_t\, dt + \sqrt{2\gamma\beta^{-1}}\, dW_t,
+\end{equation}
+where $p_t$ is a momentum variable and $\gamma > 0$ is a friction coefficient. In the limit $\gamma \to \infty$, momentum is heavily damped and the system reduces to overdamped Langevin---when friction is very large, momentum is killed quickly and we recover overdamped Langevin. For finite $\gamma$, the phase-space flow has a symplectic component (from the Hamiltonian $H = \frac{1}{2}|p|^2 + \mathcal{E}(\theta)$) that is weakly broken by friction and noise. Thus momentum-based optimizers can be understood as sitting between conservative mechanics (symplectic, reversible) and overdamped dissipation (first-order, purely metric): they retain a notion of inertia while still dissipating energy. This perspective links the ``weakly broken symplectic structure'' question to practical algorithm design.
+
+\subsection{Preview: From Thermodynamic Flows to Inference and Generative Modeling}
+
+The ideas in this section---Gibbs measure, Fokker--Planck, free energy---will reappear when we discuss distribution-space dynamics, variational inference, and diffusion. The distributional perspective introduced here---equilibrium Gibbs measure, Fokker--Planck evolution, free energy as Lyapunov functional---sets the stage for the next sections:
+\begin{itemize}
+\item \textbf{Distribution-space dynamics} (Section~6): we treat $\rho_t$ as the primary state and define ``gradient flow'' on the space of measures, with Wasserstein and KL geometries.
+\item \textbf{Variational inference}: minimizing $\mathrm{KL}(q\|p)$ is free-energy minimization when $p$ is a posterior; the approximating $q$ is driven by the same thermodynamic tradeoff.
+\item \textbf{Diffusion and score-based generative modeling}: forward diffusion is an entropy-increasing Fokker--Planck flow; the learned reverse process is a controlled drift that inverts it.
+\item \textbf{Schr\"odinger bridges}: path-space variational principles that interpolate between distributions with entropy-regularized transport.
+\end{itemize}
+
+
+\section{Distribution-Space Dynamics}
+
+In the previous section we saw that stochastic dynamics induce an \emph{evolving distribution} $\rho_t$ over parameters, governed by the Fokker--Planck equation. We now take that idea one step further: we treat the \emph{distribution} as the primary state and ask how to define ``gradient flow'' and ``steepest descent'' on the space of probability measures. The answer depends on the \textbf{geometry} we choose---and different choices lead to different PDEs and different algorithms. This section introduces the two main geometries (Wasserstein and KL/Fisher) and shows how they recover familiar dynamics.
+
+\subsection{From Parameter Trajectories to Evolving Laws}
+
+We now take the distribution $\rho_t$ as the main object: instead of following one trajectory, we study how the whole probability distribution over parameters evolves. In the stochastic setting, the learning state is naturally described not only by a single trajectory $\theta_t$, but by its \textbf{law} $\rho_t$: the probability measure on $\Theta$ such that $\theta_t \sim \rho_t$. That is, $\rho_t(A) = \mathbb{P}(\theta_t \in A)$ for (Borel) sets $A \subseteq \Theta$. This viewpoint is useful in at least three settings:
+
+\begin{itemize}
+\item \textbf{Stochastic optimization:} randomness induces an evolving ensemble over parameters; we care about the distribution of iterates, not only a single run.
+\item \textbf{Inference:} in Bayesian or variational settings the object of interest is a \emph{posterior distribution} over parameters; we optimize over distributions $q$ that approximate $p$.
+\item \textbf{Generative modeling:} diffusion and flow-based models explicitly construct a \emph{flow of distributions} from noise to data.
+\end{itemize}
+
+We therefore treat $\rho_t$ as the fundamental state variable and study dynamics directly on the space of probability measures.
+
+\textbf{Notation.} Let $\mathcal{P}(\Theta)$ denote the set of probability measures on $\Theta$ (often restricted to measures with finite second moment for technical reasons). So $\mathcal{P}(\Theta)$ is the space of all probability distributions on $\Theta$; a point in this space is a whole distribution, not a single $\theta$. A \textbf{distribution-space dynamical system} is a rule that evolves $\rho_t \in \mathcal{P}(\Theta)$ through time---either as a PDE (e.g., Fokker--Planck) or as a discrete update (e.g., a proximal step on measures).
+
+\subsection{Transport Viewpoint: The Continuity Equation}
+
+Many distributional dynamics can be written as a conservation law: probability mass is neither created nor destroyed, only moved by a velocity field. A large class of distributional dynamics can be written as a \textbf{conservation law} (mass transport equation):
+\begin{equation}
+\partial_t \rho_t + \nabla \cdot(\rho_t v_t) = 0,
+\label{eq:continuity}
+\end{equation}
+where $v_t(\theta)$ is a \textbf{velocity field} on $\Theta$ that transports probability mass. This is the same continuity equation that appears in fluid dynamics: $\rho_t$ is like a density of fluid and $v_t$ is the velocity of the fluid. In one dimension, $\partial_t \rho + \partial_x(\rho v) = 0$ simply says that the rate of change of mass in any interval equals the net flux in minus the flux out. Equation \eqref{eq:continuity} expresses that \emph{probability is conserved}: no mass is created or destroyed, only moved around by the flow $v_t$.
+
+\textbf{When does diffusion appear?}
+When the underlying dynamics are stochastic (e.g., Langevin), the density evolution includes an additional \textbf{diffusion} term, yielding PDEs of Fokker--Planck type:
+\begin{equation}
+\partial_t \rho_t + \nabla\cdot(\rho_t v_t) = \nabla\cdot(D \nabla \rho_t),
+\label{eq:advectiondiffusion}
+\end{equation}
+with diffusion tensor $D$. The left-hand side is transport by the drift $v_t$; the right-hand side is spreading due to noise. So when we add noise (Langevin), we get an extra diffusion term in the PDE for $\rho_t$. The Fokker--Planck equation \eqref{eq:fokkerplanck} is of this form with $v_t = -\nabla \mathcal{E}$ and $D = \beta^{-1} I$.
+
+\subsection{Functionals on Measures and the Meaning of a Gradient}
+
+To define ``gradient flow'' on the space of measures, we need two things: a functional we want to decrease (e.g.\ free energy or KL) and a way to measure ``distance'' between measures---that is, a geometry. In finite dimensions, gradient flow is defined once we choose an energy $\mathcal{E}$ and a metric $g$: steepest descent is $\dot{\theta} = -\nabla_g \mathcal{E}$. On the space of probability measures $\mathcal{P}(\Theta)$, the same logic applies, but both ingredients require care.
+
+To define \textbf{gradient flow in $\mathcal{P}(\Theta)$}, one must specify:
+\begin{itemize}
+\item An \textbf{energy functional} $\mathcal{G} : \mathcal{P}(\Theta) \to \mathbb{R}$. Examples: free energy $\mathcal{F}(\rho)$, KL divergence $\mathrm{KL}(\rho \| p)$, or an expected cost $\int c(\theta)\,\rho(\theta)\,d\theta$.
+\item A \textbf{geometry} (metric) on $\mathcal{P}(\Theta)$ that defines distances between measures and therefore what ``steepest descent'' means. Unlike $\mathbb{R}^d$, the space of measures is infinite-dimensional and admits many inequivalent metrics.
+\end{itemize}
+
+The gradient of $\mathcal{G}$ at $\rho$ is not a vector in $\mathbb{R}^d$ but a \textbf{tangent vector} to $\mathcal{P}(\Theta)$ at $\rho$---in the transport picture, a velocity field $v$ that moves mass. So the ``gradient'' of a functional on measures is not a vector in $\mathbb{R}^d$ but a field that tells each point how to move its mass. The rate of change of $\mathcal{G}$ in the direction $v$ is given by the \textbf{first variation} $\frac{\delta \mathcal{G}}{\delta \rho}$, and the metric converts this into a preferred direction (the gradient). Different metrics yield different ``gradients'' and hence different PDEs. Which geometry we choose changes what ``steepest descent'' means and hence the resulting PDE or algorithm.
+
+Two geometries are particularly fundamental for our purposes:
+\begin{itemize}
+\item \textbf{Wasserstein geometry} (optimal transport): distance is measured by the cost of \emph{transporting} mass from one distribution to another. Natural for diffusion, fluid-like flows, and physical transport.
+\item \textbf{Information geometry} (KL / Fisher--Rao) \cite{amari1998}: distance is measured by KL divergence or the Fisher information metric. Natural for inference, variational methods, and mirror-descent-type updates.
+\end{itemize}
+
+\subsection{Wasserstein Geometry and Otto's Calculus (Steepest Descent as Transport)}
+
+In Wasserstein geometry, the distance between two distributions is the minimum cost of \emph{transporting} mass from one to the other when cost is squared distance. The \textbf{$2$-Wasserstein distance} $W_2(\rho_0, \rho_1)$ between two probability measures \cite{villani2009} is the minimal cost of \emph{transporting} the mass of $\rho_0$ onto $\rho_1$ when cost is squared Euclidean distance. Informally: imagine $\rho_0$ and $\rho_1$ as piles of sand; $W_2^2$ is the minimum total squared distance that sand particles must move to reconfigure the first pile into the second. So steepest descent in this geometry moves mass in a coordinated way, like a fluid. This ``earth mover's'' interpretation makes Wasserstein geometry natural for dynamics that \emph{move} probability mass through $\Theta$ (e.g., diffusion, advection).
+
+In Wasserstein geometry, tangent vectors at $\rho$ are represented by velocity fields $v$ that induce a flow satisfying the continuity equation \eqref{eq:continuity}. The \textbf{Otto calculus} \cite{otto2001} provides a formal Riemannian structure on $\mathcal{P}(\Theta)$ so that the ``gradient'' of a functional $\mathcal{G}$ is given by a potential. The potential $\psi_t$ is the functional derivative of $\mathcal{G}$ with respect to $\rho$; it plays the role of ``gradient'' in this geometry. Steepest descent of $\mathcal{G}$ in this geometry yields dynamics of the form
+\begin{equation}
+\partial_t \rho_t + \nabla \cdot\left(\rho_t \nabla \psi_t\right) = 0,
+\label{eq:w2transport}
+\end{equation}
+where the potential $\psi_t$ is determined by the \textbf{first variation} (functional derivative) of $\mathcal{G}$:
+\begin{equation}
+\psi_t(\theta) = \frac{\delta \mathcal{G}}{\delta \rho}(\rho_t)(\theta).
+\label{eq:firstvariation}
+\end{equation}
+Equivalently, the velocity field is
+\begin{equation}
+v_t(\theta) = - \nabla \psi_t(\theta) = - \nabla \left(\frac{\delta \mathcal{G}}{\delta \rho}(\rho_t)(\theta)\right).
+\label{eq:w2velocity}
+\end{equation}
+
+\textbf{Interpretation.} Wasserstein gradient flow is steepest descent where ``distance'' between nearby measures is measured by transport cost. So the flow moves mass in the direction that decreases $\mathcal{G}$ most efficiently \emph{per unit of mass moved}. The continuity equation ensures that this motion conserves probability.
+
+\subsection{Variational Time Discretization: The JKO Scheme}
+
+Just as minimizing movements in parameter space gave gradient flow, a minimizing-movement scheme on measures with Wasserstein penalty gives the JKO scheme. A canonical \textbf{variational} characterization of Wasserstein gradient flows is the Jordan--Kinderlehrer--Otto (JKO) minimizing movement scheme \cite{jordan1998,ambrosio2008}:
+\begin{equation}
+\rho_{k+1}
+=
+\arg\min_{\rho \in \mathcal{P}(\Theta)}
+\left\{
+\mathcal{G}(\rho)
++
+\frac{1}{2\eta} W_2^2(\rho,\rho_k)
+\right\}.
+\label{eq:jko_general}
+\end{equation}
+At each time step we choose the next distribution $\rho_{k+1}$ by minimizing $\mathcal{G}(\rho)$ (the ``energy'') plus $\frac{1}{2\eta} W_2^2(\rho, \rho_k)$ (a penalty for moving far from $\rho_k$ in Wasserstein distance). So at each step we minimize energy plus a penalty for moving far from the current distribution, where ``far'' is measured by $W_2$. This is the distributional analogue of \textbf{proximal gradient descent} in parameter space: instead of ``parameter + Euclidean penalty,'' we have ``measure + Wasserstein penalty.'' As $\eta \to 0$, the discrete iterates converge to the continuous-time Wasserstein gradient flow of $\mathcal{G}$.
+
+\subsection{Example: Fokker--Planck as Wasserstein Gradient Flow of Free Energy}
+
+We can now tie Section~5 to Section~6: the Fokker--Planck equation is exactly the Wasserstein gradient flow of the free energy $\mathcal{F}$. A central example links directly to Section~5. Consider the free energy functional
+\begin{equation}
+\mathcal{F}(\rho)
+=
+\int \mathcal{E}(\theta)\rho(\theta)\,d\theta
++
+\beta^{-1}\int \rho(\theta)\log \rho(\theta)\,d\theta.
+\end{equation}
+The first variation of $\mathcal{F}$ has two parts: one from $\int \mathcal{E}\rho$ and one from the entropy term; together they give $\frac{\delta \mathcal{F}}{\delta \rho} = \mathcal{E} + \beta^{-1}\log \rho + \mathrm{const}$. In Otto's calculus, the Wasserstein gradient flow of $\mathcal{F}$ is therefore given by $v_t = -\nabla(\mathcal{E} + \beta^{-1}\log \rho_t)$, which when substituted into the continuity equation and combined with the diffusion that arises from the $\log \rho$ term yields precisely the Fokker--Planck equation:
+\begin{equation}
+\partial_t \rho_t
+=
+\nabla\cdot(\rho_t \nabla \mathcal{E})
++
+\beta^{-1}\Delta \rho_t.
+\label{eq:fp_w2}
+\end{equation}
+So the drift term comes from the energy and the Laplacian from the entropy; thermodynamic relaxation is steepest descent of $\mathcal{F}$ in Wasserstein geometry. This provides a variational and geometric explanation for thermodynamic relaxation: the system evolves by following the direction of greatest free-energy decrease, with distance measured by transport cost.
+
+\subsection{Information Geometry: KL and Fisher--Rao Flows}
+
+For inference and variational methods, a different geometry is often used: distance is measured by KL divergence or the Fisher--Rao metric, not by transport cost. Instead of measuring distance by transport cost, we measure it by \textbf{KL divergence} $\mathrm{KL}(\rho \| \rho_k) = \int \rho \log(\rho/\rho_k)\, d\theta$ or by the \textbf{Fisher--Rao} (information) metric. A prototypical variational update takes the form
+\begin{equation}
+\rho_{k+1}
+=
+\arg\min_{\rho}
+\left\{
+\mathcal{G}(\rho) + \frac{1}{\eta}\mathrm{KL}(\rho\|\rho_k)
+\right\},
+\label{eq:klprox}
+\end{equation}
+which is the distribution-space analogue of \textbf{mirror descent}: we minimize the functional plus a KL penalty for deviating from the current $\rho_k$. In parametric families $\rho = \rho_\phi$ (e.g., Gaussians parameterized by mean and covariance), this KL-based geometry leads to \textbf{natural gradient} updates, where the gradient is preconditioned by the Fisher information matrix.
+
+\textbf{When to use which geometry?}
+\begin{itemize}
+\item \textbf{Wasserstein:} evolution is thought of as \emph{transporting mass} through $\Theta$ (particles move; diffusion; fluid-like flows). Natural for Langevin, Fokker--Planck, and physical transport.
+\item \textbf{KL / Fisher:} evolution is thought of as \emph{reweighting or deforming the density} (mass does not ``travel'' in the same sense). Natural for variational inference, Bayesian updates, and mirror descent.
+\end{itemize}
+Roughly: Wasserstein when we think of moving mass; KL/Fisher when we think of reweighting or deforming the density. The same functional $\mathcal{G}$ can have different gradient flows depending on which metric we choose; the PDE and the discrete algorithm both change.
+
+\subsection{Particle Systems and Mean-Field Limits}
+
+Distributional dynamics often arise as the limit of many particles: if we run $N$ copies of a stochastic process and look at the empirical distribution, as $N \to \infty$ it converges to a deterministic flow satisfying a PDE. Consider $N$ particles $\{\theta_t^{(i)}\}_{i=1}^N$, each evolving (e.g., by independent Langevin dynamics or by dynamics that depend on the empirical distribution). The \textbf{empirical measure} is the discrete distribution that puts mass $1/N$ at each particle:
+\begin{equation}
+\rho_t^N = \frac{1}{N}\sum_{i=1}^N \delta_{\theta_t^{(i)}}.
+\end{equation}
+So $\rho_t^N$ is the histogram of the $N$ particles; as $N$ grows, this histogram behaves like a smooth density obeying Fokker--Planck or a similar equation. As $N \to \infty$, under suitable conditions $\rho_t^N$ converges (in the sense of weak convergence of measures) to a deterministic measure $\rho_t$ whose density satisfies a PDE such as \eqref{eq:fp_w2} or more general \textbf{McKean--Vlasov} equations. Intuition: a single particle is random, but the \emph{distribution} of a large population becomes deterministic and obeys a continuum law. This provides a bridge between \emph{microscopic} learning dynamics (individual parameter trajectories, e.g., many SGD runs) and \emph{macroscopic} evolution (the flow of $\rho_t$).
+
+\subsection{Preview: Inference and Generative Modeling as Distribution Flows}
+
+The next section will show that variational inference and diffusion models are special cases of distribution-space flows with specific choices of functional and geometry. The distribution-space viewpoint provides the natural language for Section~7:
+\begin{itemize}
+\item \textbf{Variational inference:} we optimize over distributions $q$ that approximate a target $p$; the objective is KL or free energy, and the geometry is often KL/Fisher.
+\item \textbf{Diffusion models:} the forward process is a distribution flow (Fokker--Planck); the learned reverse process is a controlled flow that maps noise to data.
+\item \textbf{Schr\"odinger bridges:} path-space variational principles that interpolate between two given marginals with entropy-regularized transport.
+\end{itemize}
+
+
+\section{Connections to Optimization, Variational Inference, and Diffusion}
+
+The preceding sections developed a hierarchy of dynamical and variational structures:
+\begin{itemize}
+\item \textbf{Section~4:} deterministic gradient flows on parameter space (energy dissipation; minimizing movements in Euclidean geometry).
+\item \textbf{Section~5:} stochastic Langevin dynamics with thermodynamic structure (Gibbs equilibrium; Fokker--Planck; free energy as Lyapunov functional).
+\item \textbf{Section~6:} gradient flows of functionals on the space of probability measures (Wasserstein vs KL geometry; JKO scheme).
+\end{itemize}
+We now show that several central paradigms in modern machine learning arise as \textbf{specializations} of this general framework. In each case we identify: the \emph{state variable} (parameters vs measures), the \emph{functional} being minimized, the \emph{geometry} that defines steepest descent, and the \emph{stochastic structure} (if any). This unified view clarifies how optimization, inference, and generative modeling relate and suggests that algorithm design can be understood as choosing a variational flow with prescribed geometric and thermodynamic properties.
+
+\subsection{Deterministic Optimization as Metric Gradient Flow}
+
+We start by placing classical gradient descent in our framework: it is gradient flow of the loss in Euclidean (or Riemannian) geometry, with no noise.
+
+\textbf{State:} parameter $\theta \in \Theta$. \textbf{Functional:} $\mathcal{E}(\theta)$ (loss or risk). \textbf{Geometry:} Euclidean (or a Riemannian metric $g$). \textbf{Stochasticity:} none.
+
+Classical gradient descent is the continuous-time limit of the discrete update $\theta_{k+1} = \theta_k - \eta \nabla \mathcal{E}(\theta_k)$:
+\begin{equation}
+\dot{\theta} = - \nabla \mathcal{E}(\theta).
+\end{equation}
+This is precisely the gradient flow of $\mathcal{E}$ in Euclidean geometry (Section~4). Energy decreases monotonically: $\frac{d}{dt}\mathcal{E}(\theta(t)) = -\|\nabla \mathcal{E}\|^2 \le 0$.
+
+When the geometry is changed, the \emph{direction} of steepest descent changes:
+\begin{itemize}
+\item \textbf{Natural gradient descent} \cite{amari1998} uses the Fisher information metric (the Riemannian metric induced by the statistical model). It is often better suited to parameter spaces with curvature (e.g., distributions) and can yield faster convergence in certain regimes.
+\item \textbf{Mirror descent} \cite{nemirovski1983} corresponds to proximal updates under a Bregman divergence; the geometry is determined by a convex potential. It generalizes gradient descent to non-Euclidean geometry and is closely related to KL-based updates in distribution space.
+\end{itemize}
+
+So ``choosing an optimizer'' can be read as choosing a metric on parameter space. All such methods may be viewed as gradient flows $\dot{\theta} = - \nabla_g \mathcal{E}(\theta)$ for a chosen Riemannian metric $g$. Thus \textbf{optimizer design is geometry choice}: we are selecting how to measure ``distance'' and ``steepest'' on parameter space.
+
+\subsection{Stochastic Optimization and Implicit Sampling}
+
+SGD adds noise to the gradient; under suitable scaling that noise can be approximated by Langevin dynamics, so SGD both optimizes and implicitly samples.
+
+\textbf{State:} parameter $\theta$ (and implicitly its law $\rho_t$). \textbf{Functional:} $\mathcal{E}(\theta)$; at equilibrium, the law is Gibbs-like. \textbf{Geometry:} Euclidean on $\Theta$; distribution flow has Wasserstein structure. \textbf{Stochasticity:} gradient noise (minibatch).
+
+Stochastic gradient descent introduces noise through minibatch sampling:
+\begin{equation}
+\theta_{k+1} = \theta_k - \eta \widehat{\nabla \mathcal{E}}(\theta_k).
+\end{equation}
+Under appropriate scaling limits (small step size, large minibatch), the rescaled process can often be approximated by an SDE of Langevin type:
+\begin{equation}
+d\theta_t = - \nabla \mathcal{E}(\theta_t)\, dt + (\eta \Sigma(\theta_t))^{1/2} dW_t.
+\end{equation}
+where $\Sigma$ encodes the covariance of the gradient noise.
+
+From the thermodynamic perspective of Section~5, such dynamics do two things at once: (i) they \textbf{optimize} (drift toward low $\mathcal{E}$), and (ii) they \textbf{sample} from an implicit equilibrium distribution concentrated near low-energy regions, with spread controlled by the noise scale. So the noise structure of SGD shapes which solutions we tend to find. SGD does not simply converge to a single minimizer; it explores a region of parameter space, and the noise structure (e.g., batch size, learning rate) shapes the \textbf{implicit bias} and generalization of the learned solution. This dual interpretation links optimization to sampling and has been used to explain why SGD often finds flatter minima that generalize well.
+
+\subsection{Variational Inference as Free Energy Minimization}
+
+Variational inference approximates a target distribution $p$ (e.g.\ a posterior) by minimizing KL divergence from an approximating family to $p$. When $p$ is Gibbs, that is exactly free-energy minimization.
+
+\textbf{State:} distribution $q \in \mathcal{P}(\Theta)$ (the variational approximation). \textbf{Functional:} $\mathrm{KL}(q \| p)$ or equivalently free energy $\mathcal{F}(q)$. \textbf{Geometry:} typically KL or Fisher--Rao. \textbf{Stochasticity:} optional (e.g., reparameterized gradients).
+
+Variational inference (VI) \cite{blei2017} replaces optimization over a single parameter with \textbf{optimization over distributions}. We have a target distribution $p(\theta)$ (e.g., a Bayesian posterior) that is intractable to sample from or normalize. We choose an approximating family $\{q_\phi\}$ and select $q$ by minimizing
+\begin{equation}
+\mathrm{KL}(q \| p) = \int q(\theta) \log \frac{q(\theta)}{p(\theta)}\, d\theta.
+\end{equation}
+We use the reverse KL $\mathrm{KL}(q \| p)$ so that $q$ is encouraged to put mass where $p$ has mass and to avoid placing mass where $p$ is tiny.
+
+When the target is a Gibbs distribution, $p(\theta) \propto e^{-\beta \mathcal{E}(\theta)}$ (e.g., posterior $\propto \mathrm{likelihood} \times \mathrm{prior}$ with $\mathcal{E} = -\log(\mathrm{likelihood} \cdot \mathrm{prior})$), we have
+\begin{equation}
+\mathrm{KL}(q \| p)
+=
+\beta \int \mathcal{E}(\theta) q(\theta)\, d\theta
++
+\int q(\theta)\log q(\theta)\, d\theta
++ \text{const}.
+\end{equation}
+Up to constants and the factor $\beta^{-1}$, this is precisely the free energy functional
+\begin{equation}
+\mathcal{F}(q)
+=
+\int \mathcal{E}(\theta) q(\theta)\, d\theta
++
+\beta^{-1}\int q(\theta)\log q(\theta)\, d\theta.
+\end{equation}
+
+Thus \textbf{variational inference is minimization of free energy in distribution space}. The variational posterior $q$ is the best approximation to $p$ in the sense of KL, and the same tradeoff (expected energy vs entropy) that governs Langevin equilibrium appears here. When combined with KL-based proximal geometry (Section~6), VI updates can be seen as mirror-descent-type flows on $\mathcal{P}(\Theta)$. Practical algorithms (e.g., reparameterization, natural gradients) implement discrete approximations to these flows.
+
+\textbf{Example (mean-field Gaussian VI).} A concrete instance is variational inference with a Gaussian approximating family $q_\phi(\theta) = \mathcal{N}(\theta; \mu, \Sigma)$, where $\phi = (\mu, \Sigma)$ (or a parameterization of $\Sigma$, e.g.\ a Cholesky factor). The objective $\mathrm{KL}(q_\phi \| p)$ is minimized over $\phi$. The natural gradient of this objective with respect to $\phi$ is preconditioned by the Fisher information matrix of the Gaussian family; the resulting flow on $(\mu, \Sigma)$ is a discrete approximation to the KL-gradient flow of free energy on $\mathcal{P}(\Theta)$. So the usual mean-field Gaussian VI update is steepest descent in Fisher--Rao geometry on the space of Gaussians.
+
+\subsection{Diffusion Models as Controlled Distribution Flows}
+
+Diffusion models have two phases: a forward process that turns data into noise (a distribution flow that increases entropy) and a learned reverse process that turns noise back into data.
+
+\textbf{State:} distribution over data (or latent) space; we explicitly model $\rho_t$ along a path from data to noise and back. \textbf{Functional:} in the forward direction, entropy increase; in the reverse, a learned drift. \textbf{Geometry:} Wasserstein / transport. \textbf{Stochasticity:} central (forward and reverse SDEs).
+
+Score-based and diffusion generative models \cite{song2021,ho2020} construct probability flows in two phases.
+
+\textbf{Forward diffusion} is a stochastic process that gradually adds noise to data:
+\begin{equation}
+dx_t = f(x_t,t)\, dt + g(t)\, dW_t.
+\end{equation}
+Typically $x_0 \sim p_{\mathrm{data}}$ and as $t$ increases the distribution of $x_t$ approaches a simple noise distribution (e.g., Gaussian). The associated density evolution satisfies a Fokker--Planck equation; the process \textbf{increases entropy} and ``dissolves'' the data distribution into noise.
+
+\textbf{Reverse process.} Under suitable conditions, the time-reversal of the forward SDE is again an SDE with a modified drift that depends on the \textbf{score} $\nabla \log \rho_t(x)$. The score tells us the direction in which the density increases fastest; the reverse SDE uses it to push mass from noise toward data. Generative sampling is then: start from noise and run the reverse SDE, using a learned (e.g., neural) approximation to the score. The learned drift effectively \textbf{inverts} the forward diffusion and pushes the noise distribution back toward the data distribution.
+
+So diffusion is a controlled flow on the space of distributions: forward is Fokker--Planck; reverse is learned transport. From the distribution-space viewpoint, diffusion models are \textbf{controlled distribution flows}: the forward flow is a Fokker--Planck (Wasserstein gradient flow of free energy); the reverse flow is a learned transport that undoes it. They can also be viewed as entropy-regularized optimal transport between the noise and data distributions, or as approximations to Schr\"odinger bridges.
+
+\subsection{Schr\"odinger Bridges and Entropic Interpolation}
+
+The \textbf{Schr\"odinger bridge} problem \cite{leonard2014} asks: given two distributions at two times, what is the most likely (or entropy-regularized) stochastic process that connects them? Equivalently, given two probability distributions $\rho_0$ and $\rho_T$ at times $0$ and $T$, what is the \emph{most likely} stochastic process (or the one that minimizes relative entropy to a reference process) that has these marginals? It can be formulated as
+\begin{equation}
+\min_{\mathbb{P}} \mathrm{KL}(\mathbb{P} \| \mathbb{P}_0)
+\end{equation}
+over path measures $\mathbb{P}$ subject to $\mathbb{P}$ having marginals $\rho_0$ and $\rho_T$ at the endpoints; $\mathbb{P}_0$ is a reference (e.g., Brownian) bridge. The solution is an entropy-regularized interpolation between the two marginals.
+
+This framework unifies:
+\begin{itemize}
+\item \textbf{Optimal transport:} the limit of zero noise gives deterministic mass transport (Monge problem).
+\item \textbf{Diffusion processes:} the solution is a diffusion with a drift that enforces the endpoint constraints.
+\item \textbf{Entropy-regularized variational principles:} the objective balances fidelity to the reference process with the marginal constraints.
+\end{itemize}
+
+Diffusion models can be seen as learning an approximation to such a Schr\"odinger bridge from noise to data: the forward process is the reference, and the learned score defines the reverse process that (approximately) interpolates from noise to data.
+
+\subsection{Structural Summary}
+
+The following table summarizes how each method fits into the same variational--geometric picture; the differences are state variable, functional, and geometry. We may summarize the structural relationships as follows. Each paradigm is a variational flow; what changes is the state variable, the functional, and the geometry.
+
+\begin{center}
+\begin{tabular}{l|l|l|l}
+\textbf{Method} & \textbf{State} & \textbf{Functional} & \textbf{Geometry / Structure} \\
+\hline
+Gradient Descent & $\theta$ & $\mathcal{E}(\theta)$ & Euclidean metric \\
+Natural Gradient & $\theta$ & $\mathcal{E}(\theta)$ & Fisher metric \\
+Langevin / SGD & $\theta$, law $\rho_t$ & $\mathcal{E}$; equil.\ Gibbs & Euclidean + noise; $W_2$ for $\rho$ \\
+Variational Inference & $q \in \mathcal{P}(\Theta)$ & KL / Free energy & KL / Fisher geometry \\
+Diffusion Models & $\rho_t$ (data space) & Forward: entropy $\uparrow$; reverse: learned & Stochastic transport \\
+\end{tabular}
+\end{center}
+So algorithm design can be viewed as choosing these structural ingredients. These paradigms differ not in their core objective of functional optimization, but in the \emph{state variable} (parameter vs distribution), the \emph{functional} (energy vs free energy vs KL), and the \emph{geometric and stochastic structures} imposed on the state space. Recognizing this unity helps when designing or analyzing new algorithms: we can ask which geometry and which functional they implicitly use.
+
+\subsection{Interpretive Perspective}
+
+We can summarize the essay's viewpoint in one sentence. Modern learning algorithms may therefore be viewed as instances of a broader principle:
+
+\begin{quote}
+\textbf{Learning is variational flow under a chosen geometry and stochastic structure.}
+\end{quote}
+
+That is, each algorithm can be understood as (possibly the discrete approximation to) a dynamical system that decreases a certain functional along a direction of ``steepest descent,'' where steepest is defined by a metric on the state space. Different algorithmic families correspond to different choices of:
+\begin{itemize}
+\item \textbf{State variable:} parameters $\theta$ (optimization, SGD) vs.\ distributions $\rho$ or $q$ (VI, diffusion).
+\item \textbf{Functional:} energy $\mathcal{E}$, free energy $\mathcal{F}$, KL divergence, or an entropy-regularized transport cost.
+\item \textbf{Geometry:} Euclidean, Riemannian (e.g., Fisher), Wasserstein (transport), or KL/Fisher on measures.
+\item \textbf{Noise structure:} deterministic (gradient descent) vs.\ stochastic (Langevin, SGD, diffusion).
+\end{itemize}
+This does not say that learning \emph{is} mechanics, but that both can be described in the same variational language with different choices of geometry and dissipation. This perspective does not reduce learning to mechanics---conservative and dissipative dynamics remain distinct---but it organizes a wide range of methods under a single variational--geometric language and suggests that new algorithms can be designed by explicitly choosing these structural ingredients.
+
+\subsection{Closing Reflections}
+
+To close, we restate the main message and its implications for future work. This note developed a variational--geometric lens in which the qualitative behavior of learning dynamics is determined less by the specific algorithmic surface form than by a small set of structural choices: the \emph{state variable} (parameters versus distributions), the \emph{functional} being optimized (energy, free energy, KL), the \emph{geometry} used to define steepest descent (Euclidean/Riemannian, KL/Fisher, Wasserstein), and the \emph{stochastic structure} that injects fluctuations and induces thermodynamic relaxation. From this viewpoint, conservative mechanics and dissipative learning are not conflated; rather, they occupy distinct corners of a common variational landscape, with symplectic structure enforcing reversibility and metric structure enforcing contraction. Stochasticity then lifts parameter trajectories to distribution flows, where free energy becomes a Lyapunov functional and diffusion admits a clean variational characterization. The unifying message is therefore structural: optimization, variational inference, and diffusion can be read as different instantiations of variational flow under different geometries and noise models. This perspective suggests concrete research directions---most notably, designing learning dynamics by explicitly choosing (or interpolating between) geometric invariants, dissipation mechanisms, and fluctuation scales---and motivates treating ``optimizer design'' as the design of a dynamical system with prescribed variational and thermodynamic properties.
+
+\bibliographystyle{plain}
+\bibliography{artifact_1_refs}
 
 \end{document}
 
